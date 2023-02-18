@@ -1,9 +1,8 @@
 <template>
   <div class="login-container">
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
-
       <div class="title-container">
-        <h3 class="title">Login Form</h3>
+        <h3 class="title">机密登录系统</h3>
       </div>
 
       <el-form-item prop="username">
@@ -41,7 +40,7 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
+      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
       <div class="tips">
         <span style="margin-right:20px;">username: admin</span>
@@ -105,12 +104,19 @@ export default {
         this.$refs.password.focus()
       })
     },
+    // 登录业务，发请求，带着用户名与密码给服务器
     handleLogin() {
+      // 表单验证元素（用户名与密码）是否符合规则
       this.$refs.loginForm.validate(valid => {
+        // 验证是否符合规则
         if (valid) {
+          // 按钮有一个旋转加载
           this.loading = true
+          // 派发action：user/login，带着用户名与密码的荷载
           this.$store.dispatch('user/login', this.loginForm).then(() => {
+            // 成功的跳转
             this.$router.push({ path: this.redirect || '/' })
+            // login效果结束
             this.loading = false
           }).catch(() => {
             this.loading = false
@@ -182,6 +188,8 @@ $light_gray:#eee;
   width: 100%;
   background-color: $bg;
   overflow: hidden;
+  background: url(~@/assets/1.jpg);
+  background-size: 100% 100%;
 
   .login-form {
     position: relative;
