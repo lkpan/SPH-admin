@@ -21,4 +21,6 @@ export const reqAddOrUpdateTradeMark = (tradeMark)=>{
     }
 }
 
+// 删除品牌接口
+export const reqDeleteTrademark = (id)=>request({url:`/admin/product/baseTrademark/remove/${id}`,method:'delete'})
 

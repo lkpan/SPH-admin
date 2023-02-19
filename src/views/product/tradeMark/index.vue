@@ -38,7 +38,11 @@
             @click="updateTradeMark(row)"
             >修改</el-button
           >
-          <el-button type="danger" size="mini" icon="el-icon-delete"
+          <el-button
+            type="danger"
+            size="mini"
+            icon="el-icon-delete"
+            @click="deleteTrademark(row)"
             >删除</el-button
           >
         </template>
@@ -118,10 +122,10 @@ export default {
   data() {
     // 自定义校验规则
     var validateTmName = (rule, value, callback) => {
-        if(value.length<2||value.length>10){
-          callback(new Error('品牌名称2-10位'))
-        }
-      };
+      if (value.length < 2 || value.length > 10) {
+        callback(new Error("品牌名称2-10位"));
+      }
+    };
     return {
       // 分页器第几页
       page: 1,
@@ -146,7 +150,7 @@ export default {
           // trigger用户行为设置
           { required: true, message: "请输入品牌名称", trigger: "blur" },
           // 自定义校验规则
-          { validator: validateTmName, trigger: 'change' }
+          { validator: validateTmName, trigger: "change" },
           // { min: 2, max: 10, message: "长度在2-10个字符", trigger: "change" },
         ],
         // 品牌logo验证规则
@@ -229,11 +233,38 @@ export default {
             // 添加或者修改品牌成功后再次获取进行展示
             this.getPageList(this.tmForm.id ? this.page : 1);
           }
-        }else{
-          console.log('error submit');
-          return false
+        } else {
+          console.log("error submit");
+          return false;
         }
       });
+    },
+    // 删除品牌操作
+    deleteTrademark(row) {
+      this.$confirm(`你确定删除${row.tmName}?`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          // 点击确定会向服务器发送请求
+          let result = await this.$API.tradeMark.reqDeleteTrademark(row.id)
+          console.log(result);
+          if(result.code == 200){
+            this.$message({
+            type: "success",
+            message: "删除成功!",
+          });
+          this.getPageList()
+          }
+        })
+        .catch((error) => {
+          // 用户点击取消按钮的时候触发
+          this.$message({
+            type: "info",
+            message: "已取消删除",
+          });
+        });
     },
   },
 };
