@@ -249,13 +249,13 @@ export default {
         .then(async () => {
           // 点击确定会向服务器发送请求
           let result = await this.$API.tradeMark.reqDeleteTrademark(row.id)
-          console.log(result);
           if(result.code == 200){
             this.$message({
             type: "success",
             message: "删除成功!",
           });
-          this.getPageList()
+          // 再次获取品牌数据
+          this.getPageList(this.list.length>1?this.page:this.page-1)
           }
         })
         .catch((error) => {
