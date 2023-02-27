@@ -1,14 +1,16 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">name: {{ name }}</div>
+  <card/>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import Card from './Card'
 
 export default {
   name: 'Dashboard',
+  comments:['Card'],
   computed: {
     ...mapGetters([
       'name'

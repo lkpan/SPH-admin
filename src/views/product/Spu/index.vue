@@ -3,14 +3,19 @@
     <el-card style="margin: 20px 0px">
       <CategorySelect
         @getCategoryId="getCategoryId"
-        :show="scene!=0"
+        :show="scene != 0"
       ></CategorySelect>
     </el-card>
     <el-card>
       <!-- 底部有三个部分切换 -->
       <div v-show="scene == 0">
         <!-- 展示Spu列表结构 -->
-        <el-button type="primary" size="default" icon="el-icon-plus" :disabled="!category3Id" @click="addSpu"
+        <el-button
+          type="primary"
+          size="default"
+          icon="el-icon-plus"
+          :disabled="!category3Id"
+          @click="addSpu"
           >添加Spu</el-button
         >
         <el-table border style="width: 100%" :data="records">
@@ -32,7 +37,8 @@
                 type="success"
                 size="mini"
                 icon="el-icon-plus"
-                title="添加spu"
+                title="添加sku"
+                @click="addSku(row)"
               ></hint-button>
               <hint-button
                 type="warning"
@@ -46,19 +52,21 @@
                 size="mini"
                 icon="el-icon-info"
                 title="查看当前spu的全部sku列表"
+                @click="handler(row)"
               ></hint-button>
 
-              <el-popconfirm  title="这是一段内容确定删除吗？" @onConfirm="deleteSpu(row)">
+              <el-popconfirm
+                title="这是一段内容确定删除吗？"
+                @onConfirm="deleteSpu(row)"
+              >
                 <hint-button
-                type="danger"
-                size="mini"
-                icon="el-icon-delete"
-                title="删除spu"
-                slot="reference"
-              ></hint-button>
+                  type="danger"
+                  size="mini"
+                  icon="el-icon-delete"
+                  title="删除spu"
+                  slot="reference"
+                ></hint-button>
               </el-popconfirm>
-
-              
             </template>
           </el-table-column>
         </el-table>
@@ -79,9 +87,41 @@
         >
         </el-pagination>
       </div>
-      <SpuForm v-show="scene == 1" @changeScene="changeScene" ref="spu"></SpuForm>
-      <SkuForm v-show="scene == 2"></SkuForm>
+      <SpuForm
+        v-show="scene == 1"
+        @changeScene="changeScene"
+        ref="spu"
+      ></SpuForm>
+      <SkuForm
+        v-show="scene == 2"
+        @changeScene="changeScene"
+        ref="sku"
+      ></SkuForm>
     </el-card>
+    <!-- 弹出对话框 -->
+    <el-dialog :title="`${spu.spuName}的列表`" :visible.sync="dialogFormVisible" :before-close="close">
+      <!-- table展示sku列表 -->
+      <el-table :data="skuList" border stripe v-loading="loading">
+        <el-table-column 
+          prop="skuName"
+          label="名称">
+        </el-table-column>
+        <el-table-column 
+          prop="price"
+          label="价格">
+        </el-table-column>
+        <el-table-column 
+          prop="weight"
+          label="重量">
+        </el-table-column>
+        <el-table-column 
+          label="默认图片">
+          <template slot-scope="{row,$index}">
+            <img :src="row.skuDefaultImg" style="width: 100px;height: 100px;">
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </div>
 </template>
 
@@ -105,6 +145,10 @@ export default {
       records: [], // spu列表数据
       total: 0, // 分页器一共需要展示的条数
       scene: 0, // 0代表展示spu数据   1代表添加修改Spu 2添加sku
+      dialogFormVisible: false, // 控制对话框显示隐藏
+      spu: {},
+      skuList:[],  // 存储sku列表数据
+      loading:true // 加载
     };
   },
   methods: {
@@ -117,7 +161,7 @@ export default {
     getCategoryId({ categoryId, level }) {
       // categoryId获取到一二三分类id   level：为了区分是几级id
       if (level == 1) {
-        this.catogyri1Id = categoryId;
+        this.category1Id = categoryId;
         // 清除二三级id
         this.category2Id = "";
         this.category3Id = "";
@@ -149,41 +193,67 @@ export default {
       this.getSpuList();
     },
     // 添加spu按钮的回调
-    addSpu(){
-      this.scene = 1
+    addSpu() {
+      this.scene = 1;
       // 通知子组件spuForm发请求--两个
-      this.$refs.spu.addSpuData(this.category3Id)
+      this.$refs.spu.addSpuData(this.category3Id);
     },
     // 修改某一个SPU
-    updateSpu(row){
-      this.scene = 1
+    updateSpu(row) {
+      this.scene = 1;
       // 获取子组件spuform
       // 父组件可以通过$refs获取子组件
-      this.$refs.spu.initSpuData(row)
+      this.$refs.spu.initSpuData(row);
     },
     // 改变场景  自定义事件回调spuForm
-    changeScene({scene,flag}){
-      console.log('场景',scene,flag);
-      this.scene = scene
+    changeScene({ scene, flag }) {
+      this.scene = scene;
       // falg是为了区分保存还是添加按钮
-      if(flag=='修改'){
-        this.getSpuList(this.page)
-      }else{
-        this.getSpuList()
+      if (flag == "修改") {
+        this.getSpuList(this.page);
+      } else {
+        this.getSpuList();
       }
       // 子组件通知父组件切换场景，再次获取SPU聊表数据进行展示
       // this.getSpuList(this.page)
     },
     // 删除spu按钮回调
-    async deleteSpu(row){
-      let result = await this.$API.spu.reqDeleteSpu(row.id)
-      if(result.code==200){
-        this.$message({type:'success',message:'删除成功'})
+    async deleteSpu(row) {
+      let result = await this.$API.spu.reqDeleteSpu(row.id);
+      if (result.code == 200) {
+        this.$message({ type: "success", message: "删除成功" });
         console.log(this.page);
-        this.getSpuList(this.records.length>1?this.page:this.page-1)
+        this.getSpuList(this.records.length > 1 ? this.page : this.page - 1);
       }
+    },
+    // 添加Sku按钮回调
+    addSku(row) {
+      // 切换场景
+      this.scene = 2;
+      // 父组件调用子组件的方法,让子组件发请求，三个请求
+      this.$refs.sku.getData(this.category1Id, this.category2Id, row);
+    },
+    // 查看sku按钮回调
+    async handler(spu) {
+      this.dialogFormVisible = true
+      // 保存spu信息
+      this.spu = spu
+      // 获取sku列表的数据进行展示
+      let result = await this.$API.spu.reqSkuList(spu.id)
+      if(result.code==200){
+        this.skuList = result.data
+        // 当数据返回后，就可以隐藏loading
+        this.loading = false
+      }
+    },
+    // 关闭对话框前回调
+    close(done){
+      // loading再次变为true
+      this.loading = true
+      // 清除sku列表数据
+      this.skuList = []
+      done()
     }
-
   },
 };
 </script>
